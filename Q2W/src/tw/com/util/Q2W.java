@@ -4,12 +4,12 @@ import java.io.File;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.context.support.FileSystemXmlApplicationContext;
+//import org.springframework.context.ApplicationContext;
+//import org.springframework.context.support.ClassPathXmlApplicationContext;
+//import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 import tw.com.bean.ConnectionBean;
-import tw.com.heartbeat.clinet.serivce.HeartBeatService;
+//import tw.com.heartbeat.clinet.serivce.HeartBeatService;
 
 public class Q2W {
 
@@ -20,8 +20,8 @@ public class Q2W {
 	private static Thread thread = new Thread() {
 		@Override
 		public void run() {
-			ApplicationContext context = new ClassPathXmlApplicationContext(FILE_XML_PATH);
-			HeartBeatService service = (HeartBeatService) context.getBean("heartBeatService");
+//			ApplicationContext context = new ClassPathXmlApplicationContext(FILE_XML_PATH);
+//			HeartBeatService service = (HeartBeatService) context.getBean("heartBeatService");
 
 			String message = null;
 			while (true) {
@@ -36,13 +36,14 @@ public class Q2W {
 						logger.debug("開始推送到Queue上");
 						RabbitMQ.Push(message);
 					}
-					service.beat();
+//					service.beat();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 				if (message == null) {
 					try {
-						long breakTime = service.getHeartBeatClientVO().getTimeSeries();
+//						long breakTime = service.getHeartBeatClientVO().getTimeSeries();
+						long breakTime =10000;
 						logger.debug("休息" + breakTime + "毫秒");
 						Thread.sleep(breakTime);
 					} catch (InterruptedException e) {
@@ -56,7 +57,7 @@ public class Q2W {
 	public static void main(String[] args) throws Exception {
 		
 		FILE_XML_PATH = args[0];
-		FILE_XML_PATH = new File(FILE_XML_PATH).toURI().toString();
+//		FILE_XML_PATH = new File(FILE_XML_PATH).toURI().toString();
 		CONVERT_XML_PATH = args[1];
 
 		thread.start();

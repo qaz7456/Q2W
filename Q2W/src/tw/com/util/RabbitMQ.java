@@ -4,10 +4,20 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+//import org.springframework.context.ApplicationContext;
+//import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -24,21 +34,97 @@ public class RabbitMQ {
 	private static final Logger logger = LogManager.getLogger(RabbitMQ.class);
 
 	public static void Push(String message) throws Exception {
+		DocumentBuilderFactory domfac = DocumentBuilderFactory.newInstance();
+		DocumentBuilder dombuilder = null;
+		try {
+			dombuilder = domfac.newDocumentBuilder();
+		} catch (ParserConfigurationException e) {
+			logger.error(e);
+		}
+		File file = new File(Q2W.FILE_XML_PATH);
+		Document configDoc = null;
+		try {
+			configDoc = dombuilder.parse(file);
+		} catch (SAXException | IOException e) {
+			logger.error(e);
+		}
+		Element configRoot = configDoc.getDocumentElement();
 
-		ApplicationContext context = new ClassPathXmlApplicationContext(Q2W.FILE_XML_PATH);
+		NodeList connectionFactory = configRoot.getElementsByTagName("connectionFactory");
+		NodeList connectionInfo = connectionFactory.item(0).getChildNodes();
+		
+		String host= null;
+		int port = 0;
+		String username= null;
+		String password = null;
+		
+		for (int i = 0; i < connectionInfo.getLength(); i++) {
+			Element node = (Element) connectionInfo.item(i);
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				
+				NamedNodeMap namedNodeMap = node.getAttributes();
+				for (int l = 0; l < namedNodeMap.getLength(); ++l) {
+					Node attr = namedNodeMap.item(l);
+					String attrName = attr.getNodeName();
+					String attrVal = attr.getNodeValue();
+
+					host = "host".equals(attrName) ? attrVal : host;
+					port = "port".equals(attrName) ? Integer.valueOf(attrVal) : port;
+					username = "username".equals(attrName) ? attrVal : username;
+					password = "password".equals(attrName) ? attrVal : password;
+				}
+			}
+		}
+		logger.debug("host: {} \\ port: {} \\ username: {} \\ password: {}", host, port,
+				username,password);
+		
+		NodeList queueDestination = configRoot.getElementsByTagName("queueDestination");
+		NodeList queueDestinationInfo = queueDestination.item(0).getChildNodes();
+		
+		String queue_name = null;
+		String routing_key = null;
+		String exchange = null;
+		
+		for (int i = 0; i < queueDestinationInfo.getLength(); i++) {
+			Node node = (Node) connectionInfo.item(i);
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				
+				NamedNodeMap namedNodeMap = node.getAttributes();
+				for (int l = 0; l < namedNodeMap.getLength(); ++l) {
+					Node attr = namedNodeMap.item(l);
+					String attrName = attr.getNodeName();
+					String attrVal = attr.getNodeValue();
+
+					queue_name = "queue_name".equals(attrName) ? attrVal : queue_name;
+					routing_key = "routing_key".equals(attrName) ? attrVal : routing_key;
+					exchange = "exchange".equals(attrName) ? attrVal : exchange;
+				}
+			}
+		}
+		logger.debug("queue_name: {} \\ routing_key: {} \\ exchange: {}", queue_name, routing_key,
+				exchange);		
+		
+		
+		
+		
+		
+		
+		
+		
+//		ApplicationContext context = new ClassPathXmlApplicationContext(Q2W.FILE_XML_PATH);
 		ConnectionFactory factory = new ConnectionFactory();
 
-		ConnectionBean connectionBean = (ConnectionBean) context.getBean("connectionFactory");
-		QueueBean queueBean = (QueueBean) context.getBean("queueDestination");
+//		ConnectionBean connectionBean = (ConnectionBean) context.getBean("connectionFactory");
+//		QueueBean queueBean = (QueueBean) context.getBean("queueDestination");
 
-		String host = connectionBean.getHost();
-		int port = connectionBean.getPort();
-		String username = connectionBean.getUsername();
-		String password = connectionBean.getPassword();
+//		String host = connectionBean.getHost();
+//		int port = connectionBean.getPort();
+//		String username = connectionBean.getUsername();
+//		String password = connectionBean.getPassword();
 
-		String queue_name = queueBean.getQueueName();
-		String routing_key = queueBean.getRoutingKey();
-		String exchange = queueBean.getExchangeName();
+//		String queue_name = queueBean.getQueueName();
+//		String routing_key = queueBean.getRoutingKey();
+//		String exchange = queueBean.getExchangeName();
 
 		factory.setHost(host);
 		factory.setPort(port);
@@ -58,22 +144,89 @@ public class RabbitMQ {
 	}
 
 	public static String Pull() throws IOException, TimeoutException {
+		DocumentBuilderFactory domfac = DocumentBuilderFactory.newInstance();
+		DocumentBuilder dombuilder = null;
+		try {
+			dombuilder = domfac.newDocumentBuilder();
+		} catch (ParserConfigurationException e) {
+			logger.error(e);
+		}
+		File file = new File(Q2W.FILE_XML_PATH);
+		Document configDoc = null;
+		try {
+			configDoc = dombuilder.parse(file);
+		} catch (SAXException | IOException e) {
+			logger.error(e);
+		}
+		Element configRoot = configDoc.getDocumentElement();
 
+		NodeList connectionFactory = configRoot.getElementsByTagName("connectionFactory");
+		NodeList connectionInfo = connectionFactory.item(0).getChildNodes();
+		
+		String host= null;
+		int port = 0;
+		String username= null;
+		String password = null;
+		
+		for (int i = 0; i < connectionInfo.getLength(); i++) {
+			Element node = (Element) connectionInfo.item(i);
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				
+				NamedNodeMap namedNodeMap = node.getAttributes();
+				for (int l = 0; l < namedNodeMap.getLength(); ++l) {
+					Node attr = namedNodeMap.item(l);
+					String attrName = attr.getNodeName();
+					String attrVal = attr.getNodeValue();
+
+					host = "host".equals(attrName) ? attrVal : host;
+					port = "port".equals(attrName) ? Integer.valueOf(attrVal) : port;
+					username = "username".equals(attrName) ? attrVal : username;
+					password = "password".equals(attrName) ? attrVal : password;
+				}
+			}
+		}
+		logger.debug("host: {} \\ port: {} \\ username: {} \\ password: {}", host, port,
+				username,password);
+		
+		NodeList queueOrigin = configRoot.getElementsByTagName("queueOrigin");
+		NodeList queueOriginInfo = queueOrigin.item(0).getChildNodes();
+		
+		String queue_name = null;
+//		String routing_key = null;
+//		String exchange = null;
+		
+		for (int i = 0; i < queueOriginInfo.getLength(); i++) {
+			Element node = (Element) connectionInfo.item(i);
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				
+				NamedNodeMap namedNodeMap = node.getAttributes();
+				for (int l = 0; l < namedNodeMap.getLength(); ++l) {
+					Node attr = namedNodeMap.item(l);
+					String attrName = attr.getNodeName();
+					String attrVal = attr.getNodeValue();
+
+					queue_name = "queue_name".equals(attrName) ? attrVal : queue_name;
+//					routing_key = "routing_key".equals(attrName) ? attrVal : routing_key;
+//					exchange = "exchange".equals(attrName) ? attrVal : exchange;
+				}
+			}
+		}
+		logger.debug("queue_name: {} ", queue_name);		
 		String message = null;
 		boolean autoAck = false;
 
-		ApplicationContext context = new ClassPathXmlApplicationContext(Q2W.FILE_XML_PATH);
+//		ApplicationContext context = new ClassPathXmlApplicationContext(Q2W.FILE_XML_PATH);
 		ConnectionFactory factory = new ConnectionFactory();
 
-		ConnectionBean connectionBean = (ConnectionBean) context.getBean("connectionFactory");
-		QueueBean queueBean = (QueueBean) context.getBean("queueOrigin");
+//		ConnectionBean connectionBean = (ConnectionBean) context.getBean("connectionFactory");
+//		QueueBean queueBean = (QueueBean) context.getBean("queueOrigin");
 
-		String host = connectionBean.getHost();
-		int port = connectionBean.getPort();
-		String username = connectionBean.getUsername();
-		String password = connectionBean.getPassword();
+//		String host = connectionBean.getHost();
+//		int port = connectionBean.getPort();
+//		String username = connectionBean.getUsername();
+//		String password = connectionBean.getPassword();
 
-		String queue_name = queueBean.getQueueName();
+//		String queue_name = queueBean.getQueueName();
 
 		factory.setHost(host);
 		factory.setPort(port);
