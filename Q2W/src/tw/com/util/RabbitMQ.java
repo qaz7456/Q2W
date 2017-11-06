@@ -49,12 +49,12 @@ public class RabbitMQ {
 
 		NodeList connectionFactory = configRoot.getElementsByTagName("connectionFactory");
 		NodeList connectionInfo = connectionFactory.item(0).getChildNodes();
-		
-		String host= null;
+
+		String host = null;
 		int port = 0;
-		String username= null;
+		String username = null;
 		String password = null;
-		
+
 		for (int i = 0; i < connectionInfo.getLength(); i++) {
 			Node node = (Node) connectionInfo.item(i);
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
@@ -68,16 +68,15 @@ public class RabbitMQ {
 				password = nodeName.equals("password") ? value : password;
 			}
 		}
-		logger.debug("host: {} \\ port: {} \\ username: {} \\ password: {}", host, port,
-				username,password);
-		
+		logger.debug("host: {} \\ port: {} \\ username: {} \\ password: {}", host, port, username, password);
+
 		NodeList queueDestination = configRoot.getElementsByTagName("queueDestination");
 		NodeList queueDestinationInfo = queueDestination.item(0).getChildNodes();
-		
+
 		String queue_name = null;
 		String routing_key = null;
 		String exchange = null;
-		
+
 		for (int i = 0; i < queueDestinationInfo.getLength(); i++) {
 			Node node = (Node) queueDestinationInfo.item(i);
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
@@ -90,9 +89,8 @@ public class RabbitMQ {
 				exchange = "exchangeName".equals(nodeName) ? value : exchange;
 			}
 		}
-		logger.debug("queue_name: {} \\ routing_key: {} \\ exchange: {}", queue_name, routing_key,
-				exchange);		
-		
+		logger.debug("queue_name: {} \\ routing_key: {} \\ exchange: {}", queue_name, routing_key, exchange);
+
 		ConnectionFactory factory = new ConnectionFactory();
 
 		factory.setHost(host);
@@ -121,7 +119,7 @@ public class RabbitMQ {
 			logger.error(e);
 		}
 		File file = new File(Q2W.FILE_XML_PATH);
-		
+
 		Document configDoc = null;
 		try {
 			configDoc = dombuilder.parse(file);
@@ -132,15 +130,13 @@ public class RabbitMQ {
 
 		NodeList connectionFactory = configRoot.getElementsByTagName("connectionFactory");
 		NodeList connectionInfo = connectionFactory.item(0).getChildNodes();
-		
-		String host= null;
+
+		String host = null, virtualHost = null, username = null, password = null;
 		int port = 0;
-		String username= null;
-		String password = null;
-		
+
 		for (int i = 0; i < connectionInfo.getLength(); i++) {
 			Node node = (Node) connectionInfo.item(i);
-			
+
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
 
 				String nodeName = node.getNodeName();
@@ -150,20 +146,22 @@ public class RabbitMQ {
 				port = nodeName.equals("port") ? Integer.valueOf(value) : port;
 				username = nodeName.equals("username") ? value : username;
 				password = nodeName.equals("password") ? value : password;
+				virtualHost = nodeName.equals("virtualHost") ? value : virtualHost;
+
 			}
 		}
-		logger.debug("host: {} \\ port: {} \\ username: {} \\ password: {}", host, port,
-				username,password);
-		
+		logger.debug("host: {} \\ port: {} \\ username: {} \\ password: {} \\ virtualHost: {}", host, port, username,
+				password, virtualHost);
+
 		NodeList queueOrigin = configRoot.getElementsByTagName("queueOrigin");
 		NodeList queueOriginInfo = queueOrigin.item(0).getChildNodes();
-		
+
 		String queue_name = null;
-		
+
 		for (int i = 0; i < queueOriginInfo.getLength(); i++) {
-			
+
 			Node node = (Node) queueOriginInfo.item(i);
-			
+
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
 
 				String nodeName = node.getNodeName();
@@ -172,7 +170,7 @@ public class RabbitMQ {
 				queue_name = "queueName".equals(nodeName) ? value : queue_name;
 			}
 		}
-		logger.debug("queue_name: {} ", queue_name);		
+		logger.debug("queue_name: {} ", queue_name);
 		String message = null;
 		boolean autoAck = false;
 
@@ -182,6 +180,7 @@ public class RabbitMQ {
 		factory.setPort(port);
 		factory.setUsername(username);
 		factory.setPassword(password);
+		factory.setVirtualHost(virtualHost);
 
 		Connection connection = factory.newConnection();
 		Channel channel = connection.createChannel();
