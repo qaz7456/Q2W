@@ -43,6 +43,7 @@ public class WebService {
 	public static String execute(String message) throws Exception {
 		logger.debug("WebService FILE_XML_PATH: {}", Q2W.FILE_XML_PATH);
 		logger.debug("WebService CONVERT_XML_PATH: {}", Q2W.CONVERT_XML_PATH);
+		logger.debug("WebService execute message: {}", message);
 		
 		DocumentBuilderFactory domfac = DocumentBuilderFactory.newInstance();
 		DocumentBuilder dombuilder = null;
@@ -69,39 +70,24 @@ public class WebService {
 		
 		for (int i = 0; i < webServiceInfo.getLength(); i++) {
 			Node node = (Node) webServiceInfo.item(i);
+			
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
-				
-				NamedNodeMap namedNodeMap = node.getAttributes();
-				for (int l = 0; l < namedNodeMap.getLength(); ++l) {
-					Node attr = namedNodeMap.item(l);
-					String attrName = attr.getNodeName();
-					String attrVal = attr.getNodeValue();
 
-					format = "format".equals(attrName) ? attrVal : format;
-					type = "type".equals(attrName) ? attrVal : type;
-					url = "url".equals(attrName) ? attrVal : url;
-				}
+				String nodeName = node.getNodeName();
+				String value = node.getTextContent();
+
+				logger.debug(nodeName+" : "+value);	
+				format = "format".equals(nodeName) ? value : format;
+				type = "type".equals(nodeName) ? value : type;
+				url = "url".equals(nodeName) ? value : url;
 			}
 		}
 		logger.debug("format: {} \\ type: {} \\ url: {}", format, type,
 				url);		
 		
-		
-		
-//		ApplicationContext context = new ClassPathXmlApplicationContext(Q2W.FILE_XML_PATH);
-		
-//		WebServiceBean webServiceBean = (WebServiceBean) context.getBean("webService");
 		HttpEntity responseEntity = null;
 		String response = null;
 
-//		String format = webServiceBean.getFormat();
-//		String type = webServiceBean.getType();
-//		String url = webServiceBean.getUrl();
-//
-//		logger.debug("format: {}", format);
-//		logger.debug("type: {}", type);
-//		logger.debug("url: {}", url);
-		
 		HttpClient httpClient = HttpClients.createDefault();
 
 		if ("xml".equalsIgnoreCase(format)) {

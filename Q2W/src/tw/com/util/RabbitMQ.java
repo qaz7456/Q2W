@@ -26,9 +26,6 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.MessageProperties;
 
-import tw.com.bean.ConnectionBean;
-import tw.com.bean.QueueBean;
-
 public class RabbitMQ {
 
 	private static final Logger logger = LogManager.getLogger(RabbitMQ.class);
@@ -59,20 +56,16 @@ public class RabbitMQ {
 		String password = null;
 		
 		for (int i = 0; i < connectionInfo.getLength(); i++) {
-			Element node = (Element) connectionInfo.item(i);
+			Node node = (Node) connectionInfo.item(i);
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
-				
-				NamedNodeMap namedNodeMap = node.getAttributes();
-				for (int l = 0; l < namedNodeMap.getLength(); ++l) {
-					Node attr = namedNodeMap.item(l);
-					String attrName = attr.getNodeName();
-					String attrVal = attr.getNodeValue();
 
-					host = "host".equals(attrName) ? attrVal : host;
-					port = "port".equals(attrName) ? Integer.valueOf(attrVal) : port;
-					username = "username".equals(attrName) ? attrVal : username;
-					password = "password".equals(attrName) ? attrVal : password;
-				}
+				String nodeName = node.getNodeName();
+				String value = node.getTextContent();
+
+				host = nodeName.equals("host") ? value : host;
+				port = nodeName.equals("port") ? Integer.valueOf(value) : port;
+				username = nodeName.equals("username") ? value : username;
+				password = nodeName.equals("password") ? value : password;
 			}
 		}
 		logger.debug("host: {} \\ port: {} \\ username: {} \\ password: {}", host, port,
@@ -86,45 +79,21 @@ public class RabbitMQ {
 		String exchange = null;
 		
 		for (int i = 0; i < queueDestinationInfo.getLength(); i++) {
-			Node node = (Node) connectionInfo.item(i);
+			Node node = (Node) queueDestinationInfo.item(i);
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
-				
-				NamedNodeMap namedNodeMap = node.getAttributes();
-				for (int l = 0; l < namedNodeMap.getLength(); ++l) {
-					Node attr = namedNodeMap.item(l);
-					String attrName = attr.getNodeName();
-					String attrVal = attr.getNodeValue();
 
-					queue_name = "queue_name".equals(attrName) ? attrVal : queue_name;
-					routing_key = "routing_key".equals(attrName) ? attrVal : routing_key;
-					exchange = "exchange".equals(attrName) ? attrVal : exchange;
-				}
+				String nodeName = node.getNodeName();
+				String value = node.getTextContent();
+
+				queue_name = "queueName".equals(nodeName) ? value : queue_name;
+				routing_key = "routingKey".equals(nodeName) ? value : routing_key;
+				exchange = "exchangeName".equals(nodeName) ? value : exchange;
 			}
 		}
 		logger.debug("queue_name: {} \\ routing_key: {} \\ exchange: {}", queue_name, routing_key,
 				exchange);		
 		
-		
-		
-		
-		
-		
-		
-		
-//		ApplicationContext context = new ClassPathXmlApplicationContext(Q2W.FILE_XML_PATH);
 		ConnectionFactory factory = new ConnectionFactory();
-
-//		ConnectionBean connectionBean = (ConnectionBean) context.getBean("connectionFactory");
-//		QueueBean queueBean = (QueueBean) context.getBean("queueDestination");
-
-//		String host = connectionBean.getHost();
-//		int port = connectionBean.getPort();
-//		String username = connectionBean.getUsername();
-//		String password = connectionBean.getPassword();
-
-//		String queue_name = queueBean.getQueueName();
-//		String routing_key = queueBean.getRoutingKey();
-//		String exchange = queueBean.getExchangeName();
 
 		factory.setHost(host);
 		factory.setPort(port);
@@ -136,8 +105,8 @@ public class RabbitMQ {
 
 		channel.queueDeclare(queue_name, true, false, false, null);
 
-		channel.basicPublish(exchange, routing_key, MessageProperties.PERSISTENT_TEXT_PLAIN, message.getBytes());
 		logger.debug("寄送: {}", message);
+		channel.basicPublish(exchange, routing_key, MessageProperties.PERSISTENT_TEXT_PLAIN, message.getBytes());
 
 		channel.close();
 		connection.close();
@@ -152,6 +121,7 @@ public class RabbitMQ {
 			logger.error(e);
 		}
 		File file = new File(Q2W.FILE_XML_PATH);
+		
 		Document configDoc = null;
 		try {
 			configDoc = dombuilder.parse(file);
@@ -169,20 +139,17 @@ public class RabbitMQ {
 		String password = null;
 		
 		for (int i = 0; i < connectionInfo.getLength(); i++) {
-			Element node = (Element) connectionInfo.item(i);
+			Node node = (Node) connectionInfo.item(i);
+			
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
-				
-				NamedNodeMap namedNodeMap = node.getAttributes();
-				for (int l = 0; l < namedNodeMap.getLength(); ++l) {
-					Node attr = namedNodeMap.item(l);
-					String attrName = attr.getNodeName();
-					String attrVal = attr.getNodeValue();
 
-					host = "host".equals(attrName) ? attrVal : host;
-					port = "port".equals(attrName) ? Integer.valueOf(attrVal) : port;
-					username = "username".equals(attrName) ? attrVal : username;
-					password = "password".equals(attrName) ? attrVal : password;
-				}
+				String nodeName = node.getNodeName();
+				String value = node.getTextContent();
+
+				host = nodeName.equals("host") ? value : host;
+				port = nodeName.equals("port") ? Integer.valueOf(value) : port;
+				username = nodeName.equals("username") ? value : username;
+				password = nodeName.equals("password") ? value : password;
 			}
 		}
 		logger.debug("host: {} \\ port: {} \\ username: {} \\ password: {}", host, port,
@@ -192,41 +159,24 @@ public class RabbitMQ {
 		NodeList queueOriginInfo = queueOrigin.item(0).getChildNodes();
 		
 		String queue_name = null;
-//		String routing_key = null;
-//		String exchange = null;
 		
 		for (int i = 0; i < queueOriginInfo.getLength(); i++) {
-			Element node = (Element) connectionInfo.item(i);
+			
+			Node node = (Node) queueOriginInfo.item(i);
+			
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
-				
-				NamedNodeMap namedNodeMap = node.getAttributes();
-				for (int l = 0; l < namedNodeMap.getLength(); ++l) {
-					Node attr = namedNodeMap.item(l);
-					String attrName = attr.getNodeName();
-					String attrVal = attr.getNodeValue();
 
-					queue_name = "queue_name".equals(attrName) ? attrVal : queue_name;
-//					routing_key = "routing_key".equals(attrName) ? attrVal : routing_key;
-//					exchange = "exchange".equals(attrName) ? attrVal : exchange;
-				}
+				String nodeName = node.getNodeName();
+				String value = node.getTextContent();
+
+				queue_name = "queueName".equals(nodeName) ? value : queue_name;
 			}
 		}
 		logger.debug("queue_name: {} ", queue_name);		
 		String message = null;
 		boolean autoAck = false;
 
-//		ApplicationContext context = new ClassPathXmlApplicationContext(Q2W.FILE_XML_PATH);
 		ConnectionFactory factory = new ConnectionFactory();
-
-//		ConnectionBean connectionBean = (ConnectionBean) context.getBean("connectionFactory");
-//		QueueBean queueBean = (QueueBean) context.getBean("queueOrigin");
-
-//		String host = connectionBean.getHost();
-//		int port = connectionBean.getPort();
-//		String username = connectionBean.getUsername();
-//		String password = connectionBean.getPassword();
-
-//		String queue_name = queueBean.getQueueName();
 
 		factory.setHost(host);
 		factory.setPort(port);

@@ -1,51 +1,86 @@
 package tw.com.util;
 
-import java.io.File;
+import java.time.LocalDateTime;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-//import org.springframework.context.ApplicationContext;
-//import org.springframework.context.support.ClassPathXmlApplicationContext;
-//import org.springframework.context.support.FileSystemXmlApplicationContext;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
-import tw.com.bean.ConnectionBean;
-//import tw.com.heartbeat.clinet.serivce.HeartBeatService;
+import tw.com.heartbeat.clinet.serivce.HeartBeatService;
+import tw.com.heartbeat.clinet.vo.HeartBeatClientVO;
 
 public class Q2W {
 
 	private static final Logger logger = LogManager.getLogger(Q2W.class);
 	public static String FILE_XML_PATH = null;
-	public static String CONVERT_XML_PATH= null;
+	public static String CONVERT_XML_PATH = null;
+	public static String HEART_BEAT_XML_FILE_PATH = null;
 
 	private static Thread thread = new Thread() {
 		@Override
 		public void run() {
-//			ApplicationContext context = new ClassPathXmlApplicationContext(FILE_XML_PATH);
-//			HeartBeatService service = (HeartBeatService) context.getBean("heartBeatService");
-
 			String message = null;
+
+			Document configDoc = XmlUtil.getDocument(FILE_XML_PATH);
+			Element configRoot = configDoc.getDocumentElement();
+			NodeList heartBeatClient = configRoot.getElementsByTagName("HeartBeatClient");
+
+			NodeList clientInfo = heartBeatClient.item(0).getChildNodes();
+
+			String beatID = null;
+			String fileName = null;
+			long timeSeries = 0;
+			LocalDateTime localDateTime = LocalDateTime.now();
+
+			for (int i = 0; i < clientInfo.getLength(); i++) {
+				Node node = (Node) clientInfo.item(i);
+				if (node.getNodeType() == Node.ELEMENT_NODE) {
+					String nodeName = node.getNodeName();
+					String value = node.getTextContent();
+
+					beatID = nodeName.equals("BeatID") ? value : beatID;
+					fileName = nodeName.equals("FileName") ? value : fileName;
+					timeSeries = nodeName.equals("TimeSeries") ? Long.parseLong(value) : timeSeries;
+				}
+			}
+
+			HeartBeatClientVO heartBeatClientVO = new HeartBeatClientVO();
+
+			heartBeatClientVO.setBeatID(beatID);
+			heartBeatClientVO.setFileName(fileName);
+			heartBeatClientVO.setLocalDateTime(localDateTime);
+			heartBeatClientVO.setTimeSeries(timeSeries);
+
+			HeartBeatService heartBeatService = new HeartBeatService(HEART_BEAT_XML_FILE_PATH);
+			heartBeatService.setHeartBeatClientVO(heartBeatClientVO);
+			
+//			String inXMLStr = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ResponseStatus=\"ok\"><Product><ProductId>p09499467</ProductId><ProductStatus>Online</ProductStatus><ProductName>Jefftest贈品</ProductName><ShortDescription>testtesttttt</ShortDescription><specId=\"1\"><SpecDescription>-</SpecDescription><CustomizedProductId/><CurrentStock>500</CurrentStock><Stock>5</Stock></spec><ImageMain>https://tw.bid.yimg.com/pimg1/a7/a7/p09499467-itema-1253xf1x0300x0157-s.jpg</ImageMain><CostPrice>10</CostPrice></Product></Response>";
+//			logger.debug(Character.isXMLLike(inXMLStr));
 			while (true) {
 				try {
+
+					heartBeatService.beat();
 					message = RabbitMQ.Pull();
 
-					logger.debug("提取: {}", message);
 					if (message != null) {
+						logger.debug("提取: {}", message);
 						logger.debug("開始發送至WebService");
 						message = WebService.execute(message);
 						logger.debug("WebServic響應: {}", message);
 						logger.debug("開始推送到Queue上");
 						RabbitMQ.Push(message);
 					}
-//					service.beat();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 				if (message == null) {
 					try {
-//						long breakTime = service.getHeartBeatClientVO().getTimeSeries();
-						long breakTime =10000;
-						logger.debug("休息" + breakTime + "毫秒");
-						Thread.sleep(breakTime);
+						logger.debug("暫無資料可提取");
+						logger.debug("休息" + timeSeries + "毫秒");
+						Thread.sleep(timeSeries);
 					} catch (InterruptedException e) {
 						logger.error(e.getMessage());
 					}
@@ -55,11 +90,17 @@ public class Q2W {
 	};
 
 	public static void main(String[] args) throws Exception {
-		
-		FILE_XML_PATH = args[0];
-//		FILE_XML_PATH = new File(FILE_XML_PATH).toURI().toString();
-		CONVERT_XML_PATH = args[1];
 
+//		FILE_XML_PATH = args[0];
+		// FILE_XML_PATH = new File(FILE_XML_PATH).toURI().toString();
+//		CONVERT_XML_PATH = args[1];
+//		HEART_BEAT_XML_FILE_PATH = args[2];
+		
+		FILE_XML_PATH = "C:\\Users\\Ian\\Desktop\\Development\\q2w-config -test.xml";
+		
+//		CONVERT_XML_PATH ="C:\\Users\\Ian\\Desktop\\Development\\xmlconverter-config.xml";
+		CONVERT_XML_PATH ="C:\\Users\\Ian\\Desktop\\xmlconverter-config.xml";
+		HEART_BEAT_XML_FILE_PATH = "C:\\Users\\Ian\\Desktop\\Kevin\\HeatBeatClinetBeans.xml";
 		thread.start();
 	}
 }
