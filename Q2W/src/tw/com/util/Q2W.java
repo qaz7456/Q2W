@@ -41,9 +41,9 @@ public class Q2W {
 					String nodeName = node.getNodeName();
 					String value = node.getTextContent();
 
-					beatID = nodeName.equals("BeatID") ? value : beatID;
-					fileName = nodeName.equals("FileName") ? value : fileName;
-					timeSeries = nodeName.equals("TimeSeries") ? Long.parseLong(value) : timeSeries;
+					beatID = nodeName.equals("beatID") ? value : beatID;
+					fileName = nodeName.equals("fileName") ? value : fileName;
+					timeSeries = nodeName.equals("timeSeries") ? Long.parseLong(value) : timeSeries;
 				}
 			}
 
@@ -91,16 +91,19 @@ public class Q2W {
 
 	public static void main(String[] args) throws Exception {
 
-//		FILE_XML_PATH = args[0];
+		FILE_XML_PATH = args[0];
 		// FILE_XML_PATH = new File(FILE_XML_PATH).toURI().toString();
-//		CONVERT_XML_PATH = args[1];
-//		HEART_BEAT_XML_FILE_PATH = args[2];
+		CONVERT_XML_PATH = args[1];
+		HEART_BEAT_XML_FILE_PATH = args[2];
 		
-		FILE_XML_PATH = "C:\\Users\\Ian\\Desktop\\Development\\q2w-config -test.xml";
-		
+//		FILE_XML_PATH = "C:\\Users\\Ian\\Desktop\\Development\\q2w-config -test.xml";
 //		CONVERT_XML_PATH ="C:\\Users\\Ian\\Desktop\\Development\\xmlconverter-config.xml";
-		CONVERT_XML_PATH ="C:\\Users\\Ian\\Desktop\\xmlconverter-config.xml";
-		HEART_BEAT_XML_FILE_PATH = "C:\\Users\\Ian\\Desktop\\Kevin\\HeatBeatClinetBeans.xml";
+//		HEART_BEAT_XML_FILE_PATH = "C:\\Users\\Ian\\Desktop\\Kevin\\HeatBeatClinetBeans.xml";
+		
+//		FILE_XML_PATH = "D:\\JarManager\\jarXml\\test-q2w-config.xml";
+//		  CONVERT_XML_PATH ="D:\\jarManager\\jarXml\\test-xmlconverter-config.xml";
+//		  HEART_BEAT_XML_FILE_PATH = "D:\\jarManager\\jarXml\\test-HeatBeatClinetBeans.xml";
+		  
 		thread.start();
 	}
 }
