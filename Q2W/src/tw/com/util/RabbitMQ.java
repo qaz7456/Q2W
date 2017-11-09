@@ -2,6 +2,7 @@ package tw.com.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeoutException;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -104,7 +105,8 @@ public class RabbitMQ {
 		channel.queueDeclare(queue_name, true, false, false, null);
 
 		logger.debug("寄送: {}", message);
-		channel.basicPublish(exchange, routing_key, MessageProperties.PERSISTENT_TEXT_PLAIN, message.getBytes());
+		byte[] b = message.getBytes(StandardCharsets.UTF_8);
+		channel.basicPublish(exchange, routing_key, MessageProperties.BASIC, b);
 
 		channel.close();
 		connection.close();
