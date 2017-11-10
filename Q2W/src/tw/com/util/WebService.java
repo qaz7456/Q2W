@@ -64,9 +64,7 @@ public class WebService {
 		NodeList webService = configRoot.getElementsByTagName("webService");
 		NodeList webServiceInfo = webService.item(0).getChildNodes();
 		
-		String format = null;
-		String type = null;
-		String url = null;
+		String action=null,encode=null,format = null,type = null,url = null;
 		
 		for (int i = 0; i < webServiceInfo.getLength(); i++) {
 			Node node = (Node) webServiceInfo.item(i);
@@ -76,7 +74,8 @@ public class WebService {
 				String nodeName = node.getNodeName();
 				String value = node.getTextContent();
 
-				logger.debug(nodeName+" : "+value);	
+				action = "action".equals(nodeName) ? value : action;
+				encode = "encode".equals(nodeName) ? value : encode;
 				format = "format".equals(nodeName) ? value : format;
 				type = "type".equals(nodeName) ? value : type;
 				url = "url".equals(nodeName) ? value : url;
@@ -90,24 +89,26 @@ public class WebService {
 
 		HttpClient httpClient = HttpClients.createDefault();
 
+		
 		if ("xml".equalsIgnoreCase(format)) {
+			message = XMLConverter.getRest(format,message,Q2W.CONVERT_XML_PATH,encode);
 			format = "text/xml";
-			message = XMLConverter.getXml(message,Q2W.CONVERT_XML_PATH);
 		}
 		if ("json".equalsIgnoreCase(format)) {
+			message = XMLConverter.getRest(format,message,Q2W.CONVERT_XML_PATH,encode);
 			format = "application/json";
-			message = XMLConverter.getJson(message,Q2W.CONVERT_XML_PATH);
 		}
 
-		logger.debug("轉換: {}", message);
+		logger.debug("轉換: {}", message);	
+		
 		
 		if ("get".equalsIgnoreCase(type)) {
 			URI uri = new URIBuilder(url)
-					.addParameter("logistics_interface", new String(message.getBytes("utf-8"), "utf-8")).build();
+					.addParameter(action, new String(message.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8)).build();
 			HttpGet httpRequest = new HttpGet(uri);
 
 			httpRequest.setHeader("Content-Type", format);
-			httpRequest.addHeader("charset", "utf-8");
+			httpRequest.addHeader("charset", encode);
 
 			HttpResponse httpResponse = httpClient.execute(httpRequest);
 
@@ -117,7 +118,7 @@ public class WebService {
 
 			HttpPost httpRequest = new HttpPost(url);
 			List<NameValuePair> params = new ArrayList<NameValuePair>();
-			params.add(new BasicNameValuePair("logistics_interface", message));
+			params.add(new BasicNameValuePair(action, message));
 
 			HttpEntity entity = new UrlEncodedFormEntity(params, StandardCharsets.UTF_8);
 
@@ -127,7 +128,7 @@ public class WebService {
 
 			httpRequest.setEntity(entity);
 			httpRequest.setHeader("Content-Type", format);
-			httpRequest.addHeader("charset", "utf-8");
+			httpRequest.addHeader("charset", encode);
 
 			HttpResponse httpResponse = httpClient.execute(httpRequest);
 
@@ -138,7 +139,56 @@ public class WebService {
 			response = EntityUtils.toString(responseEntity, StandardCharsets.UTF_8);
 			logger.debug("響應: {}", response);
 		}
-		return response;
+		return response;	
+//		if ("xml".equalsIgnoreCase(format)) {
+//			format = "text/xml";
+//			message = XMLConverter.getXml(message,Q2W.CONVERT_XML_PATH);
+//		}
+//		if ("json".equalsIgnoreCase(format)) {
+//			format = "application/json";
+//			message = XMLConverter.getJson(message,Q2W.CONVERT_XML_PATH);
+//		}
+
+//		logger.debug("轉換: {}", message);	
+//		
+//		
+//		if ("get".equalsIgnoreCase(type)) {
+//			URI uri = new URIBuilder(url)
+//					.addParameter("logistics_interface", new String(message.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8)).build();
+//			HttpGet httpRequest = new HttpGet(uri);
+//
+//			httpRequest.setHeader("Content-Type", format);
+//
+//			HttpResponse httpResponse = httpClient.execute(httpRequest);
+//
+//			responseEntity = httpResponse.getEntity();
+//		}
+//		if ("post".equalsIgnoreCase(type)) {
+//
+//			HttpPost httpRequest = new HttpPost(url);
+//			List<NameValuePair> params = new ArrayList<NameValuePair>();
+//			params.add(new BasicNameValuePair("logistics_interface", message));
+//
+//			HttpEntity entity = new UrlEncodedFormEntity(params, StandardCharsets.UTF_8);
+//
+//			for (Header s : httpRequest.getAllHeaders()) {
+//				logger.debug("Header[" + s + "]");
+//			}
+//
+//			httpRequest.setEntity(entity);
+//			httpRequest.setHeader("Content-Type", format);
+//			httpRequest.addHeader("charset", "utf-8");
+//
+//			HttpResponse httpResponse = httpClient.execute(httpRequest);
+//
+//			responseEntity = httpResponse.getEntity();
+//
+//		}
+//		if (responseEntity != null) {
+//			response = EntityUtils.toString(responseEntity, StandardCharsets.UTF_8);
+//			logger.debug("響應: {}", response);
+//		}
+//		return response;
 
 	}
 }
