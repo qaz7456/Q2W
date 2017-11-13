@@ -67,7 +67,7 @@ public class Q2W {
 
 					if (message != null) {
 						logger.debug("提取: {}", message);
-						logger.debug("開始發送至WebService");
+						logger.debug("開始進行WebService前置動作");
 						message = WebService.execute(message);
 						logger.debug("WebServic響應: {}", message);
 						logger.debug("開始推送到Queue上");
