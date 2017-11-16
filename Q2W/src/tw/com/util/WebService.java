@@ -35,6 +35,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import tw.com.bean.WebServiceBean;
+import tw.com.yahooapi.util.YahooAPI;
 
 public class WebService {
 
@@ -64,7 +65,8 @@ public class WebService {
 		NodeList webService = configRoot.getElementsByTagName("webService");
 		NodeList webServiceInfo = webService.item(0).getChildNodes();
 
-		String action = null, encode = null, format = null, type = null, url = null;
+		String format = null, type = null, url = null, apiMethod = null, apiVersion = null, apiGroup = null,
+				apiAction = null, apiKey = null, sharedSecret = null;
 
 		for (int i = 0; i < webServiceInfo.getLength(); i++) {
 			Node node = (Node) webServiceInfo.item(i);
@@ -74,80 +76,115 @@ public class WebService {
 				String nodeName = node.getNodeName();
 				String value = node.getTextContent();
 
-				action = "action".equals(nodeName) ? value : action;
-				encode = "encode".equals(nodeName) ? value : encode;
+				// action = "action".equals(nodeName) ? value : action;
+				// encode = "encode".equals(nodeName) ? value : encode;
 				format = "format".equals(nodeName) ? value : format;
 				type = "type".equals(nodeName) ? value : type;
 				url = "url".equals(nodeName) ? value : url;
+
+				apiMethod = "apiMethod".equals(nodeName) ? value : apiMethod;
+				apiVersion = "apiVersion".equals(nodeName) ? value : apiVersion;
+				apiGroup = "apiGroup".equals(nodeName) ? value : apiGroup;
+				apiAction = "apiAction".equals(nodeName) ? value : apiAction;
+				apiKey = "apiKey".equals(nodeName) ? value : apiKey;
+				sharedSecret = "sharedSecret".equals(nodeName) ? value : sharedSecret;
 			}
 		}
-		logger.debug("action: {} \\ encode: {} \\ format: {} \\ type: {} \\ url: {}", action, encode, format, type,
-				url);
+		logger.debug(
+				"format: {} \\ type: {} \\ url: {} \\ apiMethod: {} \\ apiVersion: {} \\ apiGroup: {} \\ apiAction: {} \\ apiKey: {} \\ sharedSecret: {}",
+				format, type, url, apiMethod, apiVersion, apiGroup, apiAction, apiKey, sharedSecret);
 
 		HttpEntity responseEntity = null;
 		String response = null;
 
 		HttpClient httpClient = HttpClients.createDefault();
 
-		logger.debug("format : "+format);
-		logger.debug("xml.equalsIgnoreCase(format) : "+"xml".equalsIgnoreCase(format));
-		logger.debug("json.equalsIgnoreCase(format) : "+"json".equalsIgnoreCase(format));
-		
-//		String new_message = null;
-		
+		// logger.debug("format : " + format);
+		// logger.debug("xml.equalsIgnoreCase(format) : " +
+		// "xml".equalsIgnoreCase(format));
+		// logger.debug("json.equalsIgnoreCase(format) : " +
+		// "json".equalsIgnoreCase(format));
+
+		// String new_message = null;
+
+		message = XMLConverter.getRest(format, message, Q2W.CONVERT_XML_PATH, apiKey);
+
 		if ("xml".equalsIgnoreCase(format)) {
-			if ("plain".equalsIgnoreCase(encode)) {
-				message = XMLConverter.getRest(format, message, Q2W.CONVERT_XML_PATH);
-			} else {
-				message = XMLConverter.getRest(format, message, Q2W.CONVERT_XML_PATH, encode);
-			}
+			// if ("plain".equalsIgnoreCase(encode)) {
+			// message = XMLConverter.getRest(format, message,
+			// Q2W.CONVERT_XML_PATH);
+			// } else {
+			// message = XMLConverter.getRest(format, message,
+			// Q2W.CONVERT_XML_PATH, encode);
+			// }
 			format = "text/xml";
 
 		}
 		if ("json".equalsIgnoreCase(format)) {
-			if ("plain".equalsIgnoreCase(encode)) {
-				message = XMLConverter.getRest(format, message, Q2W.CONVERT_XML_PATH);
-			} else {
-				message = XMLConverter.getRest(format, message, Q2W.CONVERT_XML_PATH, encode);
-			}
+			// if ("plain".equalsIgnoreCase(encode)) {
+			// message = XMLConverter.getRest(format, message,
+			// Q2W.CONVERT_XML_PATH);
+			// } else {
+			// message = XMLConverter.getRest(format, message,
+			// Q2W.CONVERT_XML_PATH, encode);
+			// }
 			format = "application/json";
 
 		}
+
+		message = YahooAPI.getUrl(message, sharedSecret);
+		url = url + "/" + apiMethod + "/" + apiVersion + "/" + apiGroup + "/" + apiAction;
 		logger.debug("REST format: {}", message);
+		logger.debug("url: {}", url);
+
+		String[] params = message.split("&");
+
 		if ("get".equalsIgnoreCase(type)) {
-			URI uri = new URIBuilder(url)
-					.addParameter(action, new String(message.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8))
-					.build();
+			URIBuilder uriBuilder = new URIBuilder(url);
+			for (int i = 0; i < params.length; i++) {
+				String[] param = params[i].split("=");
+				String key = param[0];
+				String value = param[1];
+				
+				uriBuilder.addParameter(key,
+						new String(value.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8));
+			}
+			URI uri = uriBuilder.build();
+			// URI uri = new URIBuilder(url).build();
+			// URI uri = new URIBuilder(url).addParameter(apiAction,
+			// new String(message.getBytes(StandardCharsets.UTF_8),
+			// StandardCharsets.UTF_8)).build();
 			HttpGet httpRequest = new HttpGet(uri);
 
 			httpRequest.setHeader("Content-Type", format);
-			httpRequest.addHeader("charset", encode);
+			httpRequest.addHeader("charset", "UTF-8");
 
 			HttpResponse httpResponse = httpClient.execute(httpRequest);
 
 			responseEntity = httpResponse.getEntity();
 		}
-		if ("post".equalsIgnoreCase(type)) {
-
-			HttpPost httpRequest = new HttpPost(url);
-			List<NameValuePair> params = new ArrayList<NameValuePair>();
-			params.add(new BasicNameValuePair(action, message));
-
-			HttpEntity entity = new UrlEncodedFormEntity(params, StandardCharsets.UTF_8);
-
-			for (Header s : httpRequest.getAllHeaders()) {
-				logger.debug("Header[" + s + "]");
-			}
-
-			httpRequest.setEntity(entity);
-			httpRequest.setHeader("Content-Type", format);
-			httpRequest.addHeader("charset", encode);
-
-			HttpResponse httpResponse = httpClient.execute(httpRequest);
-
-			responseEntity = httpResponse.getEntity();
-
-		}
+		// if ("post".equalsIgnoreCase(type)) {
+		//
+		// HttpPost httpRequest = new HttpPost(url);
+		// List<NameValuePair> params = new ArrayList<NameValuePair>();
+		// // params.add(new BasicNameValuePair(action, message));
+		//
+		// HttpEntity entity = new UrlEncodedFormEntity(params,
+		// StandardCharsets.UTF_8);
+		//
+		// for (Header s : httpRequest.getAllHeaders()) {
+		// logger.debug("Header[" + s + "]");
+		// }
+		//
+		// httpRequest.setEntity(entity);
+		// httpRequest.setHeader("Content-Type", format);
+		// httpRequest.addHeader("charset", "UTF-8");
+		//
+		// HttpResponse httpResponse = httpClient.execute(httpRequest);
+		//
+		// responseEntity = httpResponse.getEntity();
+		//
+		// }
 		if (responseEntity != null) {
 			response = EntityUtils.toString(responseEntity, StandardCharsets.UTF_8);
 		}

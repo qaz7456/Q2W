@@ -91,18 +91,18 @@ public class Q2W {
 
 	public static void main(String[] args) throws Exception {
 
-		FILE_XML_PATH = args[0];
-		CONVERT_XML_PATH = args[1];
-		HEART_BEAT_XML_FILE_PATH = args[2];
+//		FILE_XML_PATH = args[0];
+//		CONVERT_XML_PATH = args[1];
+//		HEART_BEAT_XML_FILE_PATH = args[2];
 		 //FILE_XML_PATH = new File(FILE_XML_PATH).toURI().toString();
 		
 //		FILE_XML_PATH = "C:\\Users\\Ian\\Desktop\\Development\\q2w-config -test.xml";
 //		CONVERT_XML_PATH ="C:\\Users\\Ian\\Desktop\\Development\\xmlconverter-config.xml";
 //		HEART_BEAT_XML_FILE_PATH = "C:\\Users\\Ian\\Desktop\\Kevin\\HeatBeatClinetBeans.xml";
 		
-//		FILE_XML_PATH = "D:\\JarManager\\jarXml\\test-q2w-config.xml";
-//		CONVERT_XML_PATH = "D:\\jarManager\\jarXml\\test-xmlconverter-config.xml";
-//		HEART_BEAT_XML_FILE_PATH = "D:\\jarManager\\jarXml\\test-HeatBeatClinetBeans.xml";
+		FILE_XML_PATH = "D:\\JarManager\\jarXml\\test-q2w-config.xml";
+		CONVERT_XML_PATH = "D:\\jarManager\\jarXml\\test-xmlconverter-config.xml";
+		HEART_BEAT_XML_FILE_PATH = "D:\\jarManager\\jarXml\\test-HeatBeatClinetBeans.xml";
 		  
 		thread.start();
 	}
