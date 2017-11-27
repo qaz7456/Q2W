@@ -51,10 +51,8 @@ public class RabbitMQ {
 		NodeList connectionFactory = configRoot.getElementsByTagName("connectionFactory");
 		NodeList connectionInfo = connectionFactory.item(0).getChildNodes();
 
-		String host = null;
 		int port = 0;
-		String username = null;
-		String password = null;
+		String host = null, username = null, password = null, virtualHost = null;
 
 		for (int i = 0; i < connectionInfo.getLength(); i++) {
 			Node node = (Node) connectionInfo.item(i);
@@ -67,9 +65,10 @@ public class RabbitMQ {
 				port = nodeName.equals("port") ? Integer.valueOf(value) : port;
 				username = nodeName.equals("username") ? value : username;
 				password = nodeName.equals("password") ? value : password;
+				virtualHost = nodeName.equals("virtualHost") ? value : virtualHost;
 			}
 		}
-		logger.debug("host: {} \\ port: {} \\ username: {} \\ password: {}", host, port, username, password);
+		logger.debug("host: {} \\ port: {} \\ username: {} \\ password: {} \\ virtualHost: {}", host, port, username, password,virtualHost);
 
 		NodeList queueDestination = configRoot.getElementsByTagName("queueDestination");
 		NodeList queueDestinationInfo = queueDestination.item(0).getChildNodes();
@@ -98,15 +97,21 @@ public class RabbitMQ {
 		factory.setPort(port);
 		factory.setUsername(username);
 		factory.setPassword(password);
+		factory.setVirtualHost(virtualHost);
 
 		Connection connection = factory.newConnection();
 		Channel channel = connection.createChannel();
 
-		channel.queueDeclare(queue_name, true, false, false, null);
+		// channel.exchangeDeclare(exchange, TYPE);
+//		channel.exchangeDeclare(exchange, TYPE, true, false, null);
+		// 設定queue持久化 durable=true
+		 channel.queueDeclare(queue_name, true, false, false, null);
 
 		logger.debug("寄送: {}", message);
 		byte[] b = message.getBytes(StandardCharsets.UTF_8);
-		channel.basicPublish(exchange, routing_key, MessageProperties.BASIC, b);
+		// channel.basicPublish(exchange, routing_key, MessageProperties.BASIC,
+		// b);
+		channel.basicPublish(exchange, routing_key, null, b);
 
 		channel.close();
 		connection.close();
@@ -158,7 +163,7 @@ public class RabbitMQ {
 		NodeList queueOrigin = configRoot.getElementsByTagName("queueOrigin");
 		NodeList queueOriginInfo = queueOrigin.item(0).getChildNodes();
 
-		String queue_name = null;
+		String queue_name = null, exchangeName = null;
 
 		for (int i = 0; i < queueOriginInfo.getLength(); i++) {
 
@@ -170,6 +175,7 @@ public class RabbitMQ {
 				String value = node.getTextContent();
 
 				queue_name = "queueName".equals(nodeName) ? value : queue_name;
+				exchangeName = "exchangeName".equals(nodeName) ? value : exchangeName;
 			}
 		}
 		logger.debug("queue_name: {} ", queue_name);
@@ -186,6 +192,8 @@ public class RabbitMQ {
 
 		Connection connection = factory.newConnection();
 		Channel channel = connection.createChannel();
+
+		// channel.exchangeDeclare(exchangeName, TYPE);
 
 		GetResponse response = channel.basicGet(queue_name, autoAck);
 		if (response == null) {
