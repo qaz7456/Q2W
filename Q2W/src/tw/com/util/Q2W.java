@@ -47,8 +47,6 @@ public class Q2W {
 				}
 			}
 			
-//			String inXMLStr = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ResponseStatus=\"ok\"><Product><ProductId>p09499467</ProductId><ProductStatus>Online</ProductStatus><ProductName>Jefftest贈品</ProductName><ShortDescription>testtesttttt</ShortDescription><specId=\"1\"><SpecDescription>-</SpecDescription><CustomizedProductId/><CurrentStock>500</CurrentStock><Stock>5</Stock></spec><ImageMain>https://tw.bid.yimg.com/pimg1/a7/a7/p09499467-itema-1253xf1x0300x0157-s.jpg</ImageMain><CostPrice>10</CostPrice></Product></Response>";
-//			logger.debug(Character.isXMLLike(inXMLStr));
 			while (true) {
 				try {
 					HeartBeatClientVO heartBeatClientVO = new HeartBeatClientVO();
