@@ -46,7 +46,7 @@ public class Q2W {
 					timeSeries = nodeName.equals("timeSeries") ? Long.parseLong(value) : timeSeries;
 				}
 			}
-			
+
 			while (true) {
 				try {
 					HeartBeatClientVO heartBeatClientVO = new HeartBeatClientVO();
@@ -58,21 +58,26 @@ public class Q2W {
 
 					HeartBeatService heartBeatService = new HeartBeatService(HEART_BEAT_XML_FILE_PATH);
 					heartBeatService.setHeartBeatClientVO(heartBeatClientVO);
-					
+
 					heartBeatService.beat();
-					
+
 					message = RabbitMQ.Pull();
 
 					if (message != null) {
-						logger.debug("提取: {}", message);
-						logger.debug("開始進行WebService前置動作");
-						message = WebService.execute(message);
-						logger.debug("WebServic響應: {}", message);
-						logger.debug("開始推送到Queue上");
-						RabbitMQ.Push(message);
+						try {
+							logger.debug("提取: {}", message);
+							logger.debug("開始進行WebService前置動作");
+							String result = WebService.execute(message);
+							logger.debug("WebServic響應: {}", result);
+							logger.debug("開始推送到Queue上");
+							RabbitMQ.Push(result);
+						} catch (Exception e) {
+							logger.error(e.getMessage());
+							RabbitMQ.ErrorPush(message);
+						}
 					}
 				} catch (Exception e) {
-					e.printStackTrace();
+					logger.error(e.getMessage());
 				}
 				if (message == null) {
 					try {
@@ -92,16 +97,21 @@ public class Q2W {
 		FILE_XML_PATH = args[0];
 		CONVERT_XML_PATH = args[1];
 		HEART_BEAT_XML_FILE_PATH = args[2];
-		 //FILE_XML_PATH = new File(FILE_XML_PATH).toURI().toString();
-		
-//		FILE_XML_PATH = "C:\\Users\\Ian\\Desktop\\Development\\q2w-config -test.xml";
-//		CONVERT_XML_PATH ="C:\\Users\\Ian\\Desktop\\Development\\xmlconverter-config.xml";
-//		HEART_BEAT_XML_FILE_PATH = "C:\\Users\\Ian\\Desktop\\Kevin\\HeatBeatClinetBeans.xml";
-		
-//		FILE_XML_PATH = "D:\\JarManager\\jarXml\\test-q2w-config.xml";
-//		CONVERT_XML_PATH = "D:\\jarManager\\jarXml\\test-xmlconverter-config.xml";
-//		HEART_BEAT_XML_FILE_PATH = "D:\\jarManager\\jarXml\\test-HeatBeatClinetBeans.xml";
-		  
+		// FILE_XML_PATH = new File(FILE_XML_PATH).toURI().toString();
+
+		// FILE_XML_PATH = "C:\\Users\\Ian\\Desktop\\Development\\q2w-config
+		// -test.xml";
+		// CONVERT_XML_PATH
+		// ="C:\\Users\\Ian\\Desktop\\Development\\xmlconverter-config.xml";
+		// HEART_BEAT_XML_FILE_PATH =
+		// "C:\\Users\\Ian\\Desktop\\Kevin\\HeatBeatClinetBeans.xml";
+
+		// FILE_XML_PATH = "D:\\JarManager\\jarXml\\test-q2w-config.xml";
+		// CONVERT_XML_PATH =
+		// "D:\\jarManager\\jarXml\\test-xmlconverter-config.xml";
+		// HEART_BEAT_XML_FILE_PATH =
+		// "D:\\jarManager\\jarXml\\test-HeatBeatClinetBeans.xml";
+
 		thread.start();
 	}
 }
